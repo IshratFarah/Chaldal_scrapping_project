@@ -9,11 +9,43 @@ from selenium.webdriver.common.by import By
 driver = webdriver.Chrome()
 
 # Open the webpage
-URL = "https://chaldal.com"
-driver.get(URL)
+URL_home = "https://chaldal.com"
+driver.get(URL_home)
 
-sidebars = []
-url_list = []
+# Define variables
+sidebars = []   # contains the names of the sidebars
+sidebar_url_list = []   # contains the links to the sidebars
+
+
+def find_sidebar_links():
+    ul = driver.find_elements(By.CSS_SELECTOR, "ul[class*='level-']")
+    for a_tags in ul:
+        links = a_tags.find_elements(By.TAG_NAME, "a")   # finds the <a> tags
+        for link in links:
+            url_sidebar = link.get_attribute("href")  # finds the href from the <a> tags
+            sidebar_url_list.append(url_sidebar)
+            sidebars.append(link.text)   # finds the texts shown associated with the links (options in the menus)
+            # print('option: ' + link.text + ' url: ' + url_sidebar)
+    return sidebar_url_list, sidebars
+
+
+def initialize(url):
+    driver.get(url)
+    scroll_page()
+    html_content = driver.page_source
+    soup = BeautifulSoup(html_content,"lxml")
+    return soup
+
+
+def find_product_detail(product_link):
+    print("function entered")
+    detail_link = URL_home + product_link
+    print(detail_link)
+    soup = initialize(detail_link)
+    description = soup.find("div", class_="details").text
+    print('product description' + description)
+    return description
+
 
 
 def scroll_page():
@@ -28,33 +60,24 @@ def scroll_page():
         last_height = new_height
 
 
-ul = driver.find_elements(By.CSS_SELECTOR, "ul[class*='level-']")
-for a_tags in ul:
-    links = a_tags.find_elements(By.TAG_NAME,"a")   # finds the <a> tags
-    for link in links:
-        url = link.get_attribute("href")  # finds the href from the <a> tags
-        url_list.append(url)
-        sidebars.append(link.text)   # finds the texts shown associated with the links (options in the menus)
-        # print('option: ' + link.text + ' url: ' + url)
+sidebar_url_list, sidebars = find_sidebar_links()
 
-data = {'menu' : sidebars, 'url' : url_list}
+# Save the sidebars and associated links
+data = {'menu': sidebars, 'url': sidebar_url_list}
 df = pd.DataFrame(data)
 df.set_index('url', inplace=True)
-df.to_excel("F:\Scrapping\Chaldaal_dynamic_test.xlsx",sheet_name="urls")
+df.to_excel("E:\Chaldal_scrapping_project\Chaldal_scraper\scrapped_data\Chaldaal_dynamic_test.xlsx", sheet_name="urls")
 
-for url in url_list:
-    driver.get(url)
-    scroll_page()
-html_content = driver.page_source
-soup = BeautifulSoup(html_content,"lxml")
-
+for url in sidebar_url_list:
+    soup = initialize(url)
     try:
-        productPane = soup.find("div",class_="productPane")
-        products = productPane.findAll("div",class_="product")
+        productPane = soup.find("div", class_="productPane")
+        products = productPane.findAll("div", class_="product")
         items = []
         quantities = []
         prices = []
         product_links = []
+        descriptions = []
         for product in products:
             item = product.find("div", class_="name").text
             quantity = product.find("div", class_="subText").text
@@ -67,41 +90,28 @@ soup = BeautifulSoup(html_content,"lxml")
             quantities.append(quantity)
             prices.append(price)
             product_links.append(product_link)
+            description = find_product_detail(product_link)
+            # print(description)
+            descriptions.append(description)
+            if len(items) == 5:
+                break
+    except Exception:
+        print(description)
 
-    except:
-        print("Exception occurred")
-
-    df2 = pd.DataFrame(columns=['item','quantity','price','product_link'],
-                       data={"item":items, "quantity":quantities, "price":prices,
-                             "product_link":product_links})
+    df2 = pd.DataFrame(columns=['item', 'quantity', 'price', 'product_link', 'description'],
+                       data={"item": items, "quantity": quantities, "price": prices,
+                             "product_link": product_links, "description": descriptions})
     menu = df.loc[url, 'menu']
-    print(f"URL: {url}, Menu: {menu}")
+    # print(f"URL: {url}, Menu: {menu}")
     sheetname = df.loc[url, 'menu']
-    with pd.ExcelWriter("F:\Scrapping\Chaldaal_dynamic_test.xlsx", mode='a') as writer:
+    with pd.ExcelWriter("E:\Chaldal_scrapping_project\Chaldal_scraper\scrapped_data\Chaldaal_dynamic_test.xlsx", mode='a') as writer:
         df2.to_excel(writer, sheet_name=sheetname)
 
-# print(df['url'])
-
-# for url in url_list:
-#     menu = df.loc[url, 'menu']
-#     print(f"URL: {url}, Menu: {menu}")
-
-def find_product_detail():
-    product_link = "/date-crown-lulu-dates-400-gm"
-    details = []
-    detail_link = URL + product_link
-    driver.get(detail_link)
-    html_content = driver.page_source
-    soup = BeautifulSoup(html_content,"lxml")
-    description = soup.find("div", class_="details").text
-    print(description)
 
 driver.close()
 
 
-
-
-#### skip this art for now #####
+#### skip this part for now #####
 
 # food_sublinks = driver.find_elements(By.CSS_SELECTOR,"ul[class*='level-2']>li>div>a")
 # print(food_sublinks)
