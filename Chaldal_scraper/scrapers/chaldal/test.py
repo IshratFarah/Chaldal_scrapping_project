@@ -70,24 +70,46 @@ df.set_index('url', inplace=True)
 df.to_excel("E:\Projects\Chaldal_scrapping_project\Chaldal_scraper\scrapped_data\Chaldaal_dynamic_test.xlsx",
             sheet_name="urls")
 
-# items = []
-# quantities = []
-# prices = []
-# product_links = []
-# descriptions = []
-# category = []
+items = []
+quantities = []
+prices = []
+product_links = []
+descriptions = []
+category = []
 # i = 0
+
+
+def scrap_product_info(products):
+    i = 0
+    for product in products:
+        if i == 3:
+            i = 0
+            break
+        item = product.find("div", class_="name").text
+        quantity = product.find("div", class_="subText").text
+        if product.find("div", class_="discountedPrice"):
+            price = product.find("div", class_="discountedPrice").text
+        else:
+            price = product.find("div", class_="price").text
+        product_link = product.find("a", class_="btnShowDetails").get("href")
+        items.append(item)
+        quantities.append(quantity)
+        prices.append(price)
+        product_links.append(product_link)
+        description = find_product_detail(product_link)
+        descriptions.append(description)
+        category.append(menubar)
+        i = i + 1
+        print(i)
 
 for url in category_url_list:
     soup = initialize(url)
     menubar = df.loc[url, 'menu']
-    # print(menubar)
-    # if menubar == "Food":
-    #     break
     try:
         print(menubar)
         productPane = soup.find("div", class_="productPane")
-        products = productPane.findAll("div", class_="product")
+        prod_elements = productPane.findAll("div", class_="product")
+        scrap_product_info(prod_elements)
         # for product in products:
         #     # print("entered loop")
         #     if i == 3:
