@@ -44,7 +44,6 @@ def find_product_detail(product_link):
     return description
 
 
-
 def scroll_page():
     # Scroll down the page multiple times to load more content
     last_height = driver.execute_script("return document.body.scrollHeight")
@@ -84,9 +83,10 @@ for url in sidebar_url_list:
         productPane = soup.find("div", class_="productPane")
         products = productPane.findAll("div", class_="product")
         for product in products:
+            print("entered loop")
             if i == 3:
                 i = 0
-            break
+                break
             item = product.find("div", class_="name").text
             quantity = product.find("div", class_="subText").text
             if product.find("div", class_="discountedPrice"):
