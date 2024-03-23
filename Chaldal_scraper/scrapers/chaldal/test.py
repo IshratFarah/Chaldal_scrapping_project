@@ -38,12 +38,9 @@ def initialize(url):
 
 
 def find_product_detail(product_link):
-    print("function entered")
     detail_link = URL_home + product_link
-    print(detail_link)
     soup = initialize(detail_link)
     description = soup.find("div", class_="details").text
-    print('product description' + description)
     return description
 
 
@@ -66,19 +63,30 @@ sidebar_url_list, sidebars = find_sidebar_links()
 data = {'menu': sidebars, 'url': sidebar_url_list}
 df = pd.DataFrame(data)
 df.set_index('url', inplace=True)
-df.to_excel("E:\Chaldal_scrapping_project\Chaldal_scraper\scrapped_data\Chaldaal_dynamic_test.xlsx", sheet_name="urls")
+df.to_excel("E:\Projects\Chaldal_scrapping_project\Chaldal_scraper\scrapped_data\Chaldaal_dynamic_test.xlsx",
+            sheet_name="urls")
+
+items = []
+quantities = []
+prices = []
+product_links = []
+descriptions = []
+category = []
+i = 0
 
 for url in sidebar_url_list:
     soup = initialize(url)
+    menubar = df.loc[url, 'menu']
+    print(menubar)
+    if menubar == "Food":
+        break
     try:
         productPane = soup.find("div", class_="productPane")
         products = productPane.findAll("div", class_="product")
-        items = []
-        quantities = []
-        prices = []
-        product_links = []
-        descriptions = []
         for product in products:
+            if i == 3:
+                i = 0
+            break
             item = product.find("div", class_="name").text
             quantity = product.find("div", class_="subText").text
             if product.find("div", class_="discountedPrice"):
@@ -91,23 +99,22 @@ for url in sidebar_url_list:
             prices.append(price)
             product_links.append(product_link)
             description = find_product_detail(product_link)
-            # print(description)
             descriptions.append(description)
-            if len(items) == 5:
-                break
+            category.append(menubar)
+            i = i + 1
+            print(i)
     except Exception:
-        print(description)
+        print("Exception occurred")
 
-    df2 = pd.DataFrame(columns=['item', 'quantity', 'price', 'product_link', 'description'],
-                       data={"item": items, "quantity": quantities, "price": prices,
-                             "product_link": product_links, "description": descriptions})
-    menu = df.loc[url, 'menu']
-    # print(f"URL: {url}, Menu: {menu}")
-    sheetname = df.loc[url, 'menu']
-    with pd.ExcelWriter("E:\Chaldal_scrapping_project\Chaldal_scraper\scrapped_data\Chaldaal_dynamic_test.xlsx", mode='a') as writer:
-        df2.to_excel(writer, sheet_name=sheetname)
+df2 = pd.DataFrame(columns=['item', 'quantity', 'price', 'description', 'category'],
+                   data={"item": items, "quantity": quantities, "price": prices,
+                   "description": descriptions, "category": category})
 
+with pd.ExcelWriter("E:\Projects\Chaldal_scrapping_project\Chaldal_scraper\scrapped_data\Chaldaal_dynamic_test.xlsx",
+                    engine='openpyxl', mode='a') as writer:
+    df2.to_excel(writer, sheet_name="raw_data")
 
+print(df2)
 driver.close()
 
 
