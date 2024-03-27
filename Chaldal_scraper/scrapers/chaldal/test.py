@@ -17,8 +17,8 @@ category_url_list = []  # contains the links to the categories in sidebars
 categories = []  # contains the titles of the categories in sidebars
 subcategory_url_list = []   # contains the links to the subcategories
 subcategory = []    # contains the titles to the subcategories
-submenu_list = []
-all_item = []
+submenu_list = []   # list of dataframe. Each df contain subcategories and associated links
+all_item = []   # contains the list of all item information
 path = f"{os.getcwd()}\\Chaldal_scraper\\scrapped_data\\"
 file_name = "Chaldaal_submenu_test.xlsx"
 
@@ -27,15 +27,11 @@ def find_links(link_container):
     container = link_container
     url_list = []
     url_title = []
-    # print("find_links function entered")
-    # print(container)
     for a_tags in container:
         links = a_tags.find_elements(By.TAG_NAME, "a")
-        print(links) # finds the <a> tags
         for link in links:
             url_list.append(link.get_attribute("href"))    # finds the href from the <a> tags
-            url_title.append(link.text)   # finds the texts shown associated with the links (options in the menus)
-            print(url_title)
+            url_title.append(link.text)   # finds the link titles
     return url_list, url_title
 
 
@@ -47,7 +43,7 @@ def initialize(url):
     return soup
 
 
-def find_product_detail(product_link):
+def find_product_description(product_link):
     detail_link = url_home + product_link
     soup = initialize(detail_link)
     description = soup.find("div", class_="details").text
@@ -92,75 +88,57 @@ def scrap_product_info(soup,menubar):
             quantities.append(quantity)
             prices.append(price)
             product_links.append(product_link)
-            description = find_product_detail(product_link)
+            description = find_product_description(product_link)
             descriptions.append(description)
             category.append(menubar)
             i = i + 1
-            # print(i)
         df_item_by_cat = pd.DataFrame(columns=['item', 'quantity', 'price', 'description', 'category'],
-                           data={"item": items, "quantity": quantities, "price": prices,
+                         data={"item": items, "quantity": quantities, "price": prices,
                                  "description": descriptions, "category": category})
-        print(df_item_by_cat)
         all_item.append(df_item_by_cat)
-    except  AttributeError:
+    except AttributeError:
         submenu_links = []
         submenu_titles = []
         sub_link_container = driver.find_elements(By.CLASS_NAME, "category-links-wrapper")
-        submenu_links, submenu_titles = find_links(sub_link_container)
-        data_s = {'menu': submenu_titles, 'url': submenu_links}
-        df_s = pd.DataFrame(data_s)
-        df_s.set_index('url', inplace=True)
-        submenu_list.append(df_s)
-        print(df_s.shape)
-        for url in submenu_links:
-            soup = initialize(url)
-            menubar = df_s.loc[url, 'menu']
-            scrap_product_info(soup,menubar)
+        df_sub = save_data(sub_link_container)
+        print(df_sub)
+        submenu_list.append(df_sub)
+        submenu_links = df_sub['url']
+        for index, row in df_sub.iterrows():
+            soup = initialize(row['url'])
+            scrap_product_info(soup,row['menu'])
+
+
+def save_data(container):
+    links, link_titles = find_links(container)
+    data = {'menu': link_titles, 'url': links}
+    df = pd.DataFrame(data)
+    return df
 
 
 def main():
-    link_container = driver.find_elements(By.CSS_SELECTOR, "ul[class*='level-']")
-    category_url_list, categories = find_links(link_container)
-    # df_submenu = pd.DataFrame()
-
-    # Save the sidebars and associated links
-    data = {'menu': categories, 'url': category_url_list}
-    df_menu_links = pd.DataFrame(data)
-    df_menu_links.set_index('url', inplace=True)
-    df_menu_links.to_excel("E:\Projects\Chaldal_scrapping_project\Chaldal_scraper\scrapped_data\Chaldaal_submenu_test.xlsx",
-                           sheet_name="menu_urls")
-
-    for url in category_url_list:
-        soup = initialize(url)
-        menubar = df_menu_links .loc[url, 'menu']
-        if menubar == "Cleaning Supplies":
+    menu_link_container = driver.find_elements(By.CSS_SELECTOR, "ul[class*='level-']")
+    df_menu = save_data(menu_link_container)
+    df_menu.to_excel("E:\Projects\Chaldal_scrapping_project\Chaldal_scraper\scrapped_data\Chaldaal_submenu_test.xlsx",
+                     sheet_name="menu_urls", index=False)
+    for index, row in df_menu.iterrows():
+        soup = initialize(row['url'])
+        if row['menu'] == "Cleaning Supplies":
             break
-        scrap_product_info(soup,menubar)
+        scrap_product_info(soup, row['menu'])
 
-
-    # with pd.ExcelWriter(
-    #         "E:\Projects\Chaldal_scrapping_project\Chaldal_scraper\scrapped_data\Chaldaal_submenu_test.xlsx",
-    #         engine='openpyxl', mode='a') as writer:
-    #     df_s.to_excel(writer, sheet_name="submenu_urls")
-    # print(df_submenu)
-
-    print(submenu_list)
-
-    # df2 = pd.DataFrame(columns=['item', 'quantity', 'price', 'description', 'category'],
-    #                    data={"item": items, "quantity": quantities, "price": prices,
-    #                    "description": descriptions, "category": category})
-
+    # Save the subcategories and the associated links
     df_submenu_links = pd.concat(submenu_list, ignore_index=True)
     with pd.ExcelWriter("E:\Projects\Chaldal_scrapping_project\Chaldal_scraper\scrapped_data\Chaldaal_submenu_test.xlsx",
                         engine='openpyxl', mode='a') as writer:
         df_submenu_links.to_excel(writer, sheet_name="submenu_urls", index=False)
 
+    # Save information of all items in a single dataframe
     df_all_item = pd.concat(all_item, ignore_index= True)
     with pd.ExcelWriter("E:\Projects\Chaldal_scrapping_project\Chaldal_scraper\scrapped_data\Chaldaal_submenu_test.xlsx",
                         engine='openpyxl', mode='a') as writer:
         df_all_item.to_excel(writer, sheet_name="item_info", index=False)
 
-    print(df_all_item)
     driver.close()
 
 
