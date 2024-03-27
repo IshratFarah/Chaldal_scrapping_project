@@ -97,16 +97,9 @@ def scrap_product_info(soup,menubar):
                                  "description": descriptions, "category": category})
         all_item.append(df_item_by_cat)
     except AttributeError:
-        submenu_links = []
-        submenu_titles = []
         sub_link_container = driver.find_elements(By.CLASS_NAME, "category-links-wrapper")
-        df_sub = save_data(sub_link_container)
-        print(df_sub)
+        df_sub = get_categories(sub_link_container)
         submenu_list.append(df_sub)
-        submenu_links = df_sub['url']
-        for index, row in df_sub.iterrows():
-            soup = initialize(row['url'])
-            scrap_product_info(soup,row['menu'])
 
 
 def save_data(container):
@@ -116,16 +109,21 @@ def save_data(container):
     return df
 
 
-def main():
-    menu_link_container = driver.find_elements(By.CSS_SELECTOR, "ul[class*='level-']")
-    df_menu = save_data(menu_link_container)
-    df_menu.to_excel("E:\Projects\Chaldal_scrapping_project\Chaldal_scraper\scrapped_data\Chaldaal_submenu_test.xlsx",
-                     sheet_name="menu_urls", index=False)
-    for index, row in df_menu.iterrows():
+def get_categories(container):
+    df = save_data(container)
+    for index, row in df.iterrows():
         soup = initialize(row['url'])
         if row['menu'] == "Cleaning Supplies":
             break
         scrap_product_info(soup, row['menu'])
+    return df
+
+
+def main():
+    menu_link_container = driver.find_elements(By.CSS_SELECTOR, "ul[class*='level-']")
+    df_menu = get_categories(menu_link_container)
+    df_menu.to_excel("E:\Projects\Chaldal_scrapping_project\Chaldal_scraper\scrapped_data\Chaldaal_submenu_test.xlsx",
+                     sheet_name="menu_urls", index=False)
 
     # Save the subcategories and the associated links
     df_submenu_links = pd.concat(submenu_list, ignore_index=True)
