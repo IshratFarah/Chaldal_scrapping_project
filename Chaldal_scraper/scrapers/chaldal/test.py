@@ -19,9 +19,9 @@ subcategory_url_list = []   # contains the links to the subcategories
 subcategory = []    # contains the titles to the subcategories
 submenu_list = []   # list of dataframe. Each df contain subcategories and associated links
 all_item = []   # contains the list of all item information
-path = f"{os.getcwd()}\\Chaldal_scraper\\scrapped_data\\"
-file_name = "Chaldaal_submenu_test.xlsx"
-
+path = "E:\\Projects\\Chaldal_scrapping_project\\Chaldal_scraper\\scrapped_data\\"
+file_name = "Chaldaal_rawdata_v1.0.xlsx"
+full_filepath = path + file_name
 
 def find_links(link_container):
     container = link_container
@@ -113,7 +113,7 @@ def get_categories(container):
     df = save_data(container)
     for index, row in df.iterrows():
         soup = initialize(row['url'])
-        if row['menu'] == "Cleaning Supplies":
+        if row['menu'] == "Food":
             break
         scrap_product_info(soup, row['menu'])
     return df
@@ -122,19 +122,16 @@ def get_categories(container):
 def main():
     menu_link_container = driver.find_elements(By.CSS_SELECTOR, "ul[class*='level-']")
     df_menu = get_categories(menu_link_container)
-    df_menu.to_excel("E:\Projects\Chaldal_scrapping_project\Chaldal_scraper\scrapped_data\Chaldaal_submenu_test.xlsx",
-                     sheet_name="menu_urls", index=False)
+    df_menu.to_excel(full_filepath, sheet_name="menu_urls", index=False)
 
     # Save the subcategories and the associated links
     df_submenu_links = pd.concat(submenu_list, ignore_index=True)
-    with pd.ExcelWriter("E:\Projects\Chaldal_scrapping_project\Chaldal_scraper\scrapped_data\Chaldaal_submenu_test.xlsx",
-                        engine='openpyxl', mode='a') as writer:
+    with pd.ExcelWriter(full_filepath, engine='openpyxl', mode='a') as writer:
         df_submenu_links.to_excel(writer, sheet_name="submenu_urls", index=False)
 
     # Save information of all items in a single dataframe
     df_all_item = pd.concat(all_item, ignore_index= True)
-    with pd.ExcelWriter("E:\Projects\Chaldal_scrapping_project\Chaldal_scraper\scrapped_data\Chaldaal_submenu_test.xlsx",
-                        engine='openpyxl', mode='a') as writer:
+    with pd.ExcelWriter(full_filepath, engine='openpyxl', mode='a') as writer:
         df_all_item.to_excel(writer, sheet_name="item_info", index=False)
 
     driver.close()
