@@ -61,7 +61,6 @@ def scroll_page():
 
 
 def get_product_info(soup,menubar):
-    i = 0
     items = []
     quantities = []
     prices = []
@@ -72,9 +71,6 @@ def get_product_info(soup,menubar):
         productPane = soup.find("div", class_="productPane")
         products = productPane.findAll("div", class_="product")  # prod_elements == products
         for product in products:
-            if i == 2:
-                i = 0
-                break
             item = product.find("div", class_="name").text
             quantity = product.find("div", class_="subText").text
             if product.find("div", class_="discountedPrice"):
@@ -89,7 +85,6 @@ def get_product_info(soup,menubar):
             description = find_product_description(product_link)
             descriptions.append(description)
             category.append(menubar)
-            i = i + 1
         df_item_by_cat = pd.DataFrame(columns=['item', 'quantity', 'price', 'description', 'category'],
                                       data={"item": items, "quantity": quantities, "price": prices,
                                             "description": descriptions, "category": category})
@@ -104,8 +99,6 @@ def get_categories(container):
     df = find_links(container)
     for index, row in df.iterrows():
         soup = initialize(row['url'])
-        if row['menu'] == "Cleaning Supplies":
-            break
         get_product_info(soup, row['menu'])
     return df
 
