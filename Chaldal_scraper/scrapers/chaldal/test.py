@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 import time
 from selenium.webdriver.common.by import By
-import os
 
 
 # Initialize webdriver
@@ -13,15 +12,12 @@ url_home = "https://chaldal.com"
 driver.get(url_home)
 
 # Define global variables
-category_url_list = []  # contains the links to the categories in sidebars
-categories = []  # contains the titles of the categories in sidebars
-subcategory_url_list = []   # contains the links to the subcategories
-subcategory = []    # contains the titles to the subcategories
-submenu_list = []   # list of dataframe. Each df contain subcategories and associated links
+submenu_list = []   # list of dataframes. Each df contain subcategories and associated links
 all_item = []   # contains the list of all item information
 path = "E:\\Projects\\Chaldal_scrapping_project\\Chaldal_scraper\\scrapped_data\\"
 file_name = "Chaldaal_rawdata_v1.0.xlsx"
 full_filepath = path + file_name
+
 
 def find_links(link_container):
     container = link_container
@@ -95,20 +91,13 @@ def get_product_info(soup,menubar):
             category.append(menubar)
             i = i + 1
         df_item_by_cat = pd.DataFrame(columns=['item', 'quantity', 'price', 'description', 'category'],
-                         data={"item": items, "quantity": quantities, "price": prices,
-                                 "description": descriptions, "category": category})
+                                      data={"item": items, "quantity": quantities, "price": prices,
+                                            "description": descriptions, "category": category})
         all_item.append(df_item_by_cat)
     except AttributeError:
         sub_link_container = driver.find_elements(By.CLASS_NAME, "category-links-wrapper")
         df_sub = get_categories(sub_link_container)
         submenu_list.append(df_sub)
-
-
-# def save_data(container):
-#     links, link_titles = find_links(container)
-#     data = {'menu': link_titles, 'url': links}
-#     df = pd.DataFrame(data)
-#     return df
 
 
 def get_categories(container):
