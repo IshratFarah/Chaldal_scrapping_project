@@ -32,7 +32,9 @@ def find_links(link_container):
         for link in links:
             url_list.append(link.get_attribute("href"))    # finds the href from the <a> tags
             url_title.append(link.text)   # finds the link titles
-    return url_list, url_title
+    data = {'menu': url_title, 'url': url_list}
+    df = pd.DataFrame(data)
+    return df
 
 
 def initialize(url):
@@ -62,7 +64,7 @@ def scroll_page():
         last_height = new_height
 
 
-def scrap_product_info(soup,menubar):
+def get_product_info(soup,menubar):
     i = 0
     items = []
     quantities = []
@@ -102,20 +104,20 @@ def scrap_product_info(soup,menubar):
         submenu_list.append(df_sub)
 
 
-def save_data(container):
-    links, link_titles = find_links(container)
-    data = {'menu': link_titles, 'url': links}
-    df = pd.DataFrame(data)
-    return df
+# def save_data(container):
+#     links, link_titles = find_links(container)
+#     data = {'menu': link_titles, 'url': links}
+#     df = pd.DataFrame(data)
+#     return df
 
 
 def get_categories(container):
-    df = save_data(container)
+    df = find_links(container)
     for index, row in df.iterrows():
         soup = initialize(row['url'])
         if row['menu'] == "Food":
             break
-        scrap_product_info(soup, row['menu'])
+        get_product_info(soup, row['menu'])
     return df
 
 
