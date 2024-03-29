@@ -15,7 +15,7 @@ driver.get(url_home)
 submenu_list = []   # list of dataframes. Each df contain subcategories and associated links
 all_item = []   # contains the list of all item information
 path = "E:\\Projects\\Chaldal_scrapping_project\\Chaldal_scraper\\scrapped_data\\"
-file_name = "Chaldaal_rawdata_v1.0.xlsx"
+file_name = "Chaldaal_rawdata_v1.1.xlsx"
 full_filepath = path + file_name
 
 
