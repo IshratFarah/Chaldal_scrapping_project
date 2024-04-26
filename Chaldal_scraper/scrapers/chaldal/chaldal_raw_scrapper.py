@@ -17,7 +17,7 @@ all_item = []   # contains the list of all item information
 path = "E:\\Projects\\Chaldal_scrapping_project\\Chaldal_scraper\\scrapped_data\\"
 file_name = "Chaldaal_rawdata_v1.1.xlsx"
 full_filepath = path + file_name
-
+print(full_filepath)
 
 def find_links(link_container):
     container = link_container
@@ -60,7 +60,7 @@ def scroll_page():
         last_height = new_height
 
 
-def get_product_info(soup,menubar):
+def get_product_info(soup, menubar):
     items = []
     quantities = []
     prices = []
@@ -110,11 +110,13 @@ def main():
 
     # Save the subcategories and the associated links
     df_submenu_links = pd.concat(submenu_list, ignore_index=True)
+    print(df_menu.shape)
     with pd.ExcelWriter(full_filepath, engine='openpyxl', mode='a') as writer:
         df_submenu_links.to_excel(writer, sheet_name="submenu_urls", index=False)
 
     # Save information of all items in a single dataframe
     df_all_item = pd.concat(all_item, ignore_index= True)
+    print(df_all_item.shape)
     with pd.ExcelWriter(full_filepath, engine='openpyxl', mode='a') as writer:
         df_all_item.to_excel(writer, sheet_name="item_info", index=False)
 
