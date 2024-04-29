@@ -19,7 +19,8 @@ file_name = "Chaldaal_rawdata_v1.1.xlsx"
 full_filepath = path + file_name
 print(full_filepath)
 
-def find_links(link_container):
+
+def get_url(link_container):
     container = link_container
     url_list = []
     url_title = []
@@ -91,21 +92,19 @@ def get_product_info(soup, menubar):
         all_item.append(df_item_by_cat)
     except AttributeError:
         sub_link_container = driver.find_elements(By.CLASS_NAME, "category-links-wrapper")
-        df_sub = get_categories(sub_link_container)
+        df_sub = get_url(sub_link_container)
         submenu_list.append(df_sub)
 
 
-def get_categories(container):
-    df = find_links(container)
+def get_data(df):
     for index, row in df.iterrows():
         soup = initialize(row['url'])
         get_product_info(soup, row['menu'])
-    return df
 
 
 def main():
     menu_link_container = driver.find_elements(By.CSS_SELECTOR, "ul[class*='level-']")
-    df_menu = get_categories(menu_link_container)
+    df_menu = get_url(menu_link_container)
     df_menu.to_excel(full_filepath, sheet_name="menu_urls", index=False)
 
     # Save the subcategories and the associated links
@@ -115,6 +114,7 @@ def main():
         df_submenu_links.to_excel(writer, sheet_name="submenu_urls", index=False)
 
     # Save information of all items in a single dataframe
+    get_data(df_menu)
     df_all_item = pd.concat(all_item, ignore_index= True)
     print(df_all_item.shape)
     with pd.ExcelWriter(full_filepath, engine='openpyxl', mode='a') as writer:
