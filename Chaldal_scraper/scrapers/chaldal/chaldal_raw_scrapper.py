@@ -62,6 +62,7 @@ def scroll_page():
 
 
 def get_product_info(soup, menubar):
+    i = 0
     items = []
     quantities = []
     prices = []
@@ -72,6 +73,9 @@ def get_product_info(soup, menubar):
         productPane = soup.find("div", class_="productPane")
         products = productPane.findAll("div", class_="product")  # prod_elements == products
         for product in products:
+            if i == 2:
+                i = 0
+                break
             item = product.find("div", class_="name").text
             quantity = product.find("div", class_="subText").text
             if product.find("div", class_="discountedPrice"):
@@ -86,6 +90,7 @@ def get_product_info(soup, menubar):
             description = find_product_description(product_link)
             descriptions.append(description)
             category.append(menubar)
+            i = i + 1
         df_item_by_cat = pd.DataFrame(columns=['item', 'quantity', 'price', 'description', 'category'],
                                       data={"item": items, "quantity": quantities, "price": prices,
                                             "description": descriptions, "category": category})
@@ -106,15 +111,16 @@ def main():
     menu_link_container = driver.find_elements(By.CSS_SELECTOR, "ul[class*='level-']")
     df_menu = get_url(menu_link_container)
     df_menu.to_excel(full_filepath, sheet_name="menu_urls", index=False)
+    get_data(df_menu)
 
     # Save the subcategories and the associated links
     df_submenu_links = pd.concat(submenu_list, ignore_index=True)
     print(df_menu.shape)
     with pd.ExcelWriter(full_filepath, engine='openpyxl', mode='a') as writer:
         df_submenu_links.to_excel(writer, sheet_name="submenu_urls", index=False)
+    get_data(df_submenu_links)
 
     # Save information of all items in a single dataframe
-    get_data(df_menu)
     df_all_item = pd.concat(all_item, ignore_index= True)
     print(df_all_item.shape)
     with pd.ExcelWriter(full_filepath, engine='openpyxl', mode='a') as writer:

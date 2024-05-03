@@ -9,7 +9,7 @@ url_home = "https://chaldal.com"
 submenu_list = []   # list of dataframes. Each df contain subcategories and associated links
 all_item = []   # contains the list of all item information
 path = "E:\\Projects\\Chaldal_scrapping_project\\Chaldal_scraper\\scrapped_data\\"
-file_name = "Chaldaal_rawdata_v1.2.xlsx"
+file_name = "Chaldaal_rawdata_v1.3.xlsx"
 full_filepath = path + file_name
 print(full_filepath)
 
@@ -136,16 +136,18 @@ class Main:
     def executor(self):
         menu_link_container = self._handler.driver.find_elements(By.CSS_SELECTOR, "ul[class*='level-']")
         df_menu = self._get_url.get_url(menu_link_container)
+        print(df_menu.shape)
         df_menu.to_excel(full_filepath, sheet_name="menu_urls", index=False)
+        self._get_data.get_data(df_menu)
 
         # Save the subcategories and the associated links
-        # df_submenu_links = pd.concat(submenu_list, ignore_index=True)
-        # print(df_menu.shape)
-        # with pd.ExcelWriter(full_filepath, engine='openpyxl', mode='a') as writer:
-        #     df_submenu_links.to_excel(writer, sheet_name="submenu_urls", index=False)
+        df_submenu_links = pd.concat(submenu_list, ignore_index=True)
+        print(df_submenu_links.shape)
+        with pd.ExcelWriter(full_filepath, engine='openpyxl', mode='a') as writer:
+            df_submenu_links.to_excel(writer, sheet_name="submenu_urls", index=False)
+        self._get_data.get_data(df_submenu_links)
 
         # Save information of all items in a single dataframe
-        self._get_data.get_data(df_menu)
         df_all_item = pd.concat(all_item, ignore_index=True)
         print(df_all_item.shape)
         with pd.ExcelWriter(full_filepath, engine='openpyxl', mode='a') as writer:
