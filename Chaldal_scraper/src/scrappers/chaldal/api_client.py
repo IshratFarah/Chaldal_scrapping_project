@@ -9,7 +9,7 @@ url_home = "https://chaldal.com"
 submenu_list = []   # list of dataframes. Each df contain subcategories and associated links
 all_item = []   # contains the list of all item information
 path = "E:\\Projects\\Chaldal_scrapping_project\\Chaldal_scraper\\scrapped_data\\"
-file_name = "Chaldaal_rawdata_v1.3.xlsx"
+file_name = "Chaldaal_rawdata_v1.5.xlsx"
 full_filepath = path + file_name
 print(full_filepath)
 
@@ -123,6 +123,8 @@ class DataRetriever:
     def get_data(self, df):
         for index, row in df.iterrows():
             soup = self._handler.loader(row['url'])
+            if row['menu'] == "Cleaning Supplies":
+                break
             self.get_product_info(soup, row['menu'])
 
 

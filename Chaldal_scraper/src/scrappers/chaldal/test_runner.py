@@ -1,4 +1,6 @@
-from api_client import *
+from extractor import *
 
 api_client = ChaldalAPIClient()
-api_client.get_data_from_web_site()
+repository = ChaldalRepositoryServices()
+extractor = ChaldalExtractor(api_client=api_client, chaldal_repository=repository)
+extractor.save_extracted_data()
